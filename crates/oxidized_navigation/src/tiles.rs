@@ -279,6 +279,44 @@ impl NavMeshTiles {
 
         out_polygon
     }
+
+    pub fn find_closest_polygon_within_area_in_box(
+        &self,
+        nav_mesh_settings: &NavMeshSettings,
+        center: Vec3,
+        half_extents: f32,
+        area: Area,
+    ) -> Option<(UVec2, u16, Vec3)> {
+        let min = center - half_extents;
+        let max = center + half_extents;
+
+        let min_tile = nav_mesh_settings.get_tile_containing_position(min.xz());
+        let max_tile = nav_mesh_settings.get_tile_containing_position(max.xz());
+
+        let mut out_polygon = None;
+        let mut out_distance = f32::INFINITY;
+        for x in min_tile.x..=max_tile.x {
+            for y in min_tile.y..=max_tile.y {
+                let tile_coords = UVec2::new(x, y);
+                if let Some(tile) = self.tiles.get(&tile_coords) {
+                    for (poly_i, polygon) in tile.polygons.iter().enumerate() {
+                        if tile.areas[poly_i] != Some(area) {
+                            continue;
+                        }
+                        let closest_point = tile.get_closest_point_in_polygon(polygon, center);
+                        let closest_distance = closest_point.distance_squared(center);
+
+                        if closest_distance < out_distance {
+                            out_distance = closest_distance;
+                            out_polygon = Some((tile_coords, poly_i as u16, closest_point));
+                        }
+                    }
+                }
+            }
+        }
+
+        out_polygon
+    }
 }
 
 fn get_height_in_triangle(vertices: &[Vec3; VERTICES_IN_TRIANGLE], position: Vec3) -> Option<f32> {
