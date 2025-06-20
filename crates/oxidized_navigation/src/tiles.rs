@@ -300,7 +300,7 @@ impl NavMeshTiles {
                 let tile_coords = UVec2::new(x, y);
                 if let Some(tile) = self.tiles.get(&tile_coords) {
                     for (poly_i, polygon) in tile.polygons.iter().enumerate() {
-                        if tile.areas[poly_i] != Some(area) {
+                        if tile.areas[poly_i] != area {
                             continue;
                         }
                         let closest_point = tile.get_closest_point_in_polygon(polygon, center);
